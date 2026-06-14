@@ -362,6 +362,25 @@ textarea:focus {
   background: #e2e8f0;
 }
 
+.license-status-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.borrow-warning {
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+select option:disabled {
+  color: #94a3b8;
+  background: #f1f5f9;
+}
+
 .record-list,
 .bar-list,
 .checklist {

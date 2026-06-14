@@ -1,5 +1,5 @@
 import { CheckCircle2, Handshake, Save } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { api } from '../api/client.js'
 import { borrowStatuses } from '../api/options.js'
@@ -24,8 +24,17 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
 
   const setField = (field, value) => setForm((current) => ({ ...current, [field]: value }))
 
+  const selectedLicense = useMemo(() => {
+    if (!form.license) return null
+    return licenses.find((lic) => lic.id === Number(form.license)) || null
+  }, [form.license, licenses])
+
   const submit = async (event) => {
     event.preventDefault()
+    if (selectedLicense && !selectedLicense.can_borrow) {
+      notify(selectedLicense.borrow_unavailable_reason || '该证照不能借出')
+      return
+    }
     setSaving(true)
     try {
       const payload = { ...form, license: Number(form.license) }
@@ -85,11 +94,21 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
               <select value={form.license} onChange={(event) => setField('license', event.target.value)} required>
                 <option value="">选择证照</option>
                 {licenses.map((license) => (
-                  <option key={license.id} value={license.id}>
-                    {license.name} / {license.license_no}
+                  <option key={license.id} value={license.id} disabled={!license.can_borrow} title={license.borrow_unavailable_reason || ''}>
+                    {license.name} / {license.license_no} — {license.status_display}
+                    {license.is_currently_borrowed ? '（已借出）' : ''}
                   </option>
                 ))}
               </select>
+              {selectedLicense && (
+                <div className="license-status-info">
+                  <StatusBadge status={selectedLicense.computed_status} />
+                  {selectedLicense.is_currently_borrowed && <StatusBadge status="borrowed" />}
+                  {!selectedLicense.can_borrow && (
+                    <span className="borrow-warning">{selectedLicense.borrow_unavailable_reason}</span>
+                  )}
+                </div>
+              )}
             </label>
             <Field label="借用人" value={form.borrower} onChange={(value) => setField('borrower', value)} required />
             <Field label="借用部门" value={form.borrower_department} onChange={(value) => setField('borrower_department', value)} required />
@@ -112,7 +131,7 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
             <span>备注</span>
             <textarea value={form.notes} onChange={(event) => setField('notes', event.target.value)} />
           </label>
-          <button className="primary-button" disabled={saving} type="submit">
+          <button className="primary-button" disabled={saving || (selectedLicense && !selectedLicense.can_borrow)} type="submit">
             <Save size={17} />
             <span>{saving ? '保存中' : '保存记录'}</span>
           </button>

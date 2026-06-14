@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -12,7 +12,13 @@ class LicenseViewSet(viewsets.ModelViewSet):
     serializer_class = LicenseSerializer
 
     def get_queryset(self):
-        queryset = License.objects.all()
+        active_borrows = BorrowRecord.objects.filter(
+            license=OuterRef("pk"),
+            status__in=[BorrowRecord.Status.BORROWED, BorrowRecord.Status.OVERDUE],
+        )
+        queryset = License.objects.annotate(
+            _is_borrowed=Exists(active_borrows)
+        )
         search = self.request.query_params.get("search")
         status = self.request.query_params.get("status")
         license_type = self.request.query_params.get("type")
@@ -28,6 +34,7 @@ class LicenseViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(status=status)
         if license_type:
             queryset = queryset.filter(license_type=license_type)
+
         return queryset
 
     def perform_create(self, serializer):

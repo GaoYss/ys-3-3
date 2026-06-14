@@ -8,6 +8,9 @@ class LicenseSerializer(serializers.ModelSerializer):
     computed_status = serializers.CharField(read_only=True)
     license_type_display = serializers.CharField(source="get_license_type_display", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
+    is_currently_borrowed = serializers.BooleanField(read_only=True)
+    can_borrow = serializers.BooleanField(read_only=True)
+    borrow_unavailable_reason = serializers.CharField(read_only=True)
 
     class Meta:
         model = License
@@ -27,6 +30,9 @@ class LicenseSerializer(serializers.ModelSerializer):
             "status_display",
             "computed_status",
             "days_until_expiry",
+            "is_currently_borrowed",
+            "can_borrow",
+            "borrow_unavailable_reason",
             "notes",
             "created_at",
             "updated_at",
@@ -67,4 +73,14 @@ class BorrowRecordSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"expected_return_date": "预计归还日期不能早于借出日期"})
         if actual_return_date and borrow_date and actual_return_date < borrow_date:
             raise serializers.ValidationError({"actual_return_date": "实际归还日期不能早于借出日期"})
+
+        if self.instance is None:
+            license_obj = attrs.get("license")
+            if license_obj:
+                from .services import refresh_license_status
+                refresh_license_status(license_obj)
+                reason = license_obj.borrow_unavailable_reason
+                if reason:
+                    raise serializers.ValidationError({"license": reason})
+
         return attrs

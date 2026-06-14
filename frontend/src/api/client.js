@@ -10,14 +10,41 @@ async function request(path, options = {}) {
   })
 
   if (!response.ok) {
+    const contentType = response.headers.get('content-type') || ''
+    if (contentType.includes('application/json')) {
+      const data = await response.json()
+      const message = extractErrorMessage(data)
+      throw new Error(message || `请求失败: ${response.status}`)
+    }
     const message = await response.text()
-    throw new Error(message || `Request failed: ${response.status}`)
+    throw new Error(message || `请求失败: ${response.status}`)
   }
 
   if (response.status === 204) {
     return null
   }
   return response.json()
+}
+
+function extractErrorMessage(data) {
+  if (typeof data === 'string') {
+    return data
+  }
+  if (data.detail) {
+    return data.detail
+  }
+  const messages = []
+  for (const [key, value] of Object.entries(data)) {
+    if (Array.isArray(value)) {
+      messages.push(`${key}: ${value.join('; ')}`)
+    } else if (typeof value === 'string') {
+      messages.push(`${key}: ${value}`)
+    }
+  }
+  if (messages.length) {
+    return messages.join('\n')
+  }
+  return null
 }
 
 export const api = {

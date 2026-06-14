@@ -51,6 +51,29 @@ class License(models.Model):
             return self.Status.EXPIRING
         return self.Status.ACTIVE
 
+    @property
+    def is_currently_borrowed(self):
+        if hasattr(self, "_is_borrowed"):
+            return self._is_borrowed
+        return self.borrow_records.filter(
+            status__in=[BorrowRecord.Status.BORROWED, BorrowRecord.Status.OVERDUE]
+        ).exists()
+
+    @property
+    def borrow_unavailable_reason(self):
+        computed = self.computed_status
+        if computed == self.Status.ARCHIVED:
+            return "证照已归档，不能借出"
+        if computed == self.Status.EXPIRED:
+            return "证照已过期，不能借出"
+        if self.is_currently_borrowed:
+            return "证照已借出，不能重复借出"
+        return None
+
+    @property
+    def can_borrow(self):
+        return self.borrow_unavailable_reason is None
+
 
 class BorrowRecord(models.Model):
     class Status(models.TextChoices):
