@@ -95,7 +95,7 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
                 <option value="">选择证照</option>
                 {licenses.map((license) => (
                   <option key={license.id} value={license.id} disabled={!license.can_borrow} title={license.borrow_unavailable_reason || ''}>
-                    {license.name} / {license.license_no} — {license.status_display}
+                    {license.name} / {license.license_no} — {license.computed_status_display}
                     {license.is_currently_borrowed ? '（已借出）' : ''}
                   </option>
                 ))}

@@ -6,11 +6,15 @@ from .models import BorrowRecord, License
 class LicenseSerializer(serializers.ModelSerializer):
     days_until_expiry = serializers.IntegerField(read_only=True)
     computed_status = serializers.CharField(read_only=True)
+    computed_status_display = serializers.SerializerMethodField()
     license_type_display = serializers.CharField(source="get_license_type_display", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     is_currently_borrowed = serializers.BooleanField(read_only=True)
     can_borrow = serializers.BooleanField(read_only=True)
     borrow_unavailable_reason = serializers.CharField(read_only=True)
+
+    def get_computed_status_display(self, obj):
+        return dict(License.Status.choices).get(obj.computed_status, obj.computed_status)
 
     class Meta:
         model = License
@@ -29,6 +33,7 @@ class LicenseSerializer(serializers.ModelSerializer):
             "status",
             "status_display",
             "computed_status",
+            "computed_status_display",
             "days_until_expiry",
             "is_currently_borrowed",
             "can_borrow",

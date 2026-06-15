@@ -33,16 +33,16 @@ function extractErrorMessage(data) {
   if (data.detail) {
     return data.detail
   }
-  const messages = []
-  for (const [key, value] of Object.entries(data)) {
+  const values = []
+  for (const value of Object.values(data)) {
     if (Array.isArray(value)) {
-      messages.push(`${key}: ${value.join('; ')}`)
+      values.push(...value.filter((v) => typeof v === 'string'))
     } else if (typeof value === 'string') {
-      messages.push(`${key}: ${value}`)
+      values.push(value)
     }
   }
-  if (messages.length) {
-    return messages.join('\n')
+  if (values.length) {
+    return values.join('\n')
   }
   return null
 }
