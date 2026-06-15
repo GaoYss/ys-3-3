@@ -26,6 +26,16 @@ async function request(path, options = {}) {
   return response.json()
 }
 
+const fieldLabelMap = {
+  license: '证照',
+  borrower: '借用人',
+  borrower_department: '借用部门',
+  purpose: '用途',
+  borrow_date: '借出日期',
+  expected_return_date: '预计归还日期',
+  actual_return_date: '实际归还日期',
+}
+
 function extractErrorMessage(data) {
   if (typeof data === 'string') {
     return data
@@ -33,16 +43,21 @@ function extractErrorMessage(data) {
   if (data.detail) {
     return data.detail
   }
-  const values = []
-  for (const value of Object.values(data)) {
+  const messages = []
+  for (const [key, value] of Object.entries(data)) {
+    const label = fieldLabelMap[key] || key
     if (Array.isArray(value)) {
-      values.push(...value.filter((v) => typeof v === 'string'))
+      for (const msg of value) {
+        if (typeof msg === 'string') {
+          messages.push(`${label}：${msg}`)
+        }
+      }
     } else if (typeof value === 'string') {
-      values.push(value)
+      messages.push(`${label}：${value}`)
     }
   }
-  if (values.length) {
-    return values.join('\n')
+  if (messages.length) {
+    return messages.join('\n')
   }
   return null
 }

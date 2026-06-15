@@ -483,6 +483,11 @@ select option:disabled {
   background: rgb(255 255 255 / 14%);
 }
 
+.toast-message {
+  white-space: pre-line;
+  line-height: 1.5;
+}
+
 .skeleton-list {
   min-height: 180px;
   border-radius: 8px;

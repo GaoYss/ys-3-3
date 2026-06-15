@@ -32,7 +32,7 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
   const submit = async (event) => {
     event.preventDefault()
     if (selectedLicense && !selectedLicense.can_borrow) {
-      notify(selectedLicense.borrow_unavailable_reason || '该证照不能借出')
+      notify(`证照：${selectedLicense.borrow_unavailable_reason || '该证照不能借出'}`)
       return
     }
     setSaving(true)
@@ -96,7 +96,7 @@ export function BorrowPage({ licenses, borrowRecords, reload, notify }) {
                 {licenses.map((license) => (
                   <option key={license.id} value={license.id} disabled={!license.can_borrow} title={license.borrow_unavailable_reason || ''}>
                     {license.name} / {license.license_no} — {license.computed_status_display}
-                    {license.is_currently_borrowed ? '（已借出）' : ''}
+                    {license.is_currently_borrowed ? '（借出中）' : ''}
                   </option>
                 ))}
               </select>
